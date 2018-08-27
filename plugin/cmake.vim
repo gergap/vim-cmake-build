@@ -8,7 +8,7 @@ let g:loaded_cmake = 1
 " ================================================
 let s:get_targets = expand('<sfile>:p:h:h').'/get_executables.pl'
 let s:get_project_name = expand('<sfile>:p:h:h').'/get_project_name.pl'
-let s:debug_output = 1
+let s:debug_output = 0
 " ===============================================
 " global variables and settings
 " ===============================================
@@ -31,7 +31,9 @@ let g:perl_debugger="VimDebug"
 " the cmake executable
 let g:cmake="cmake"
 " save project settings on exit
-let g:save_on_exit=1
+let g:cmake_save_on_exit=1
+" create default key mappings
+let g:cmake_create_default_mappings=0
 " ====================================================================
 " automatically populated global variables (set by cmake_find_project)
 " ====================================================================
@@ -234,7 +236,7 @@ function! s:load_settings()
 endfunction
 
 function! s:save_settings()
-    if g:project_root == '' || g:save_on_exit == 0
+    if g:project_root == '' || g:cmake_save_on_exit == 0
         return
     endif
     let settingsfile=g:project_root.'/.settings.vim'
@@ -247,9 +249,11 @@ command! CMakeDebug      call s:run_debugger()
 command! CMakeExecute    call s:run_target()
 command! CMakeValgrind   call s:run_valgrind()
 " Define custom mappings
-nmap <leader>d :CMakeDebug<CR>
-nmap <leader>x :CMakeExecute<CR>
-nmap <leader>v :CMakeValgrind<CR>
+if g:cmake_create_default_mappings
+    nmap <leader>d :CMakeDebug<CR>
+    nmap <leader>x :CMakeExecute<CR>
+    nmap <leader>v :CMakeValgrind<CR>
+endif
 " autocommands
 augroup cmakegroup
     autocmd!
