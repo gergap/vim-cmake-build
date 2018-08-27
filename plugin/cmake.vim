@@ -214,9 +214,25 @@ function! s:run_debugger()
         endif
     else
         if exists("g:target")
+            if g:args == ''
+                " no arguments
+                let cmd=g:debugger.' '.g:target
+            else
+                " arguments defined
+                if (g:debugger=='gdb' || g:debugger=='cgdb')
+                    let cmd=g:debugger.' --args '.g:target.' '.g:args
+                elseif (g:debugger=='kdbg')
+                    let cmd=g:debugger.' -a "'.g:args.'" '.g:target
+                elseif (g:debugger=='nemiver')
+                    let cmd=g:debugger.' '.g:target.' '.g:args
+                else
+                    echo "Passing args to this debugger is not possible. Use the GUI or a .gdbinit file to set the args."
+                    let cmd=g:debugger.' '.g:target
+                endif
+            endif
             let s:dir=getcwd()
             call s:set_working_dir()
-            execute "silent !"g:debugger.' '.g:target
+            execute "silent !".cmd
             execute "redraw!"
             " restore directory
             exe "cd ".s:dir
