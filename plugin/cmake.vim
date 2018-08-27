@@ -287,7 +287,8 @@ function! s:save_settings()
         return
     endif
     let settingsfile=g:project_root.'/.settings.vim'
-    call writefile(["let g:target='".g:target."'"], settingsfile)
+    let settings=["let g:target='".g:target."'", "let g:args='".g:args."'"]
+    call writefile(settings, settingsfile)
 endfunction
 
 " Define custom commands
