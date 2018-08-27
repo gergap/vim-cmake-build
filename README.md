@@ -55,17 +55,18 @@ As usual you can install this plugin with your favourite plugin manager like Vun
 
 ## Key mappings
 
-You can either manually add mappings to your `.vimrc`, or use the default mappings.
-To enable the default mappings you must add this line before loading the plugin.
+To add the default key mappings you can add the following lines to your `.vimrc`,
 
 ```Vim script
-let g:cmake_create_default_mappings=1
+nmap <leader>d :CMakeDebug<CR>
+nmap <leader>x :CMakeExecute<CR>
+nmap <leader>v :CMakeValgrind<CR>
 ```
 
 ## Configuration variables
 
-All these variables contain some default values. You can change these in your `.vimrc`
-after the plugin is loaded.
+All these variables contain some default values. You can change these in your
+`.vimrc` after the plugin is loaded.
 
 ```Vim script
 " The default CMake build directory, relative to the project root
@@ -97,8 +98,13 @@ let g:cmake_save_on_exit=1
 
 # Commands
 
-* `CMakeTargetList`: Shows all executable CMake targets in new buffer. Simply navigate to the line
-containing the target you want to use and hit <CR>. This will select the target and closes the buffer.
+* `CMakeFindProject`: Finds the top level CMakeLists.txt inside the current Git
+repository. This gets invoked automatically when you start Vim and the plugin
+is loaded.  But if the Git repository didn't exist when your started Vim, or
+you simply want to change the project you can invoke this command manually.
+* `CMakeTargetList`: Shows all executable CMake targets in new buffer. Simply
+navigate to the line containing the target you want to use and hit <CR>.
+This will select the target and closes the buffer.
 * `CMakeExecute`: Executes the target without debugging.
 * `CMakeDebug`: Executes the target in the debugger.
 * `CMakeValgrind`: Executes the target using Valgrind.
@@ -107,7 +113,7 @@ containing the target you want to use and hit <CR>. This will select the target 
 
 Simply open any source file of a Git project. The plugin will automatically find the project root
 and the top level CMakeLists.txt file. Then execute the command `:CMakeTargetList`, and select the line
-if the target your want to execute by hitting `j` multiple times and press `<CR>` to use the selected line.
+of the target your want to execute by hitting `j` multiple times and press `<CR>` to use the selected line.
 
 Then use one of the default mappings above to run the selected target.
 

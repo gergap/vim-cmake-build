@@ -18,18 +18,18 @@ let g:bld_dir = 'bld'
 " default working directory for launching the target. This can be an
 " absolute path, or a relative one. Relative paths are also relative
 " to the project directory.
-let g:workdir="bin"
+let g:workdir='bin'
 " arguments passed to the target
 let g:args=""
 " Configures the debugger for native binaries: E.g. cgdb, ddd, kdbg, nemiver
-let g:debugger="cgdb"
+let g:debugger='cgdb'
 " Configures the debugger for perl scripts. It supports VimDebug, an
 " integrated perl debugger for Vim, or simply execute any external perl
 " debugger like ddd.
-let g:perl_debugger="VimDebug"
-"let g:perl_debugger="ddd"
+" Possible values: '' (not used), 'VimDebug', 'ddd'
+let g:perl_debugger=''
 " the cmake executable
-let g:cmake="cmake"
+let g:cmake='cmake'
 " save project settings on exit
 let g:cmake_save_on_exit=1
 " create default key mappings
@@ -200,7 +200,9 @@ endfunction
 
 " Checks if the configuration is correct.
 function! s:sanity_check()
-    if g:perl_debugger == 'VimDebug'
+    if g:perl_debugger == ''
+        echo "No perl debugger configured."
+    elseif g:perl_debugger == 'VimDebug'
         if exists('*DBGRstart')
             call s:debug_print("VimDebug exists.")
         else
@@ -244,16 +246,11 @@ function! s:save_settings()
 endfunction
 
 " Define custom commands
-command! CMakeTargetList call s:create_target_buffer()
-command! CMakeDebug      call s:run_debugger()
-command! CMakeExecute    call s:run_target()
-command! CMakeValgrind   call s:run_valgrind()
-" Define custom mappings
-if g:cmake_create_default_mappings
-    nmap <leader>d :CMakeDebug<CR>
-    nmap <leader>x :CMakeExecute<CR>
-    nmap <leader>v :CMakeValgrind<CR>
-endif
+command! CMakeFindProject call s:cmake_find_project()
+command! CMakeTargetList  call s:create_target_buffer()
+command! CMakeDebug       call s:run_debugger()
+command! CMakeExecute     call s:run_target()
+command! CMakeValgrind    call s:run_valgrind()
 " autocommands
 augroup cmakegroup
     autocmd!
