@@ -2,6 +2,19 @@
 
 Build, Run, Debug integration for Vim for CMake based projects.
 
+You can configure the working directory and command line arguments using
+simple Vim variables. These settings will be used for all three execution modes.
+
+## Perl support
+
+As a nice bonus the execution of Perl scripts is also supported. When the current buffer
+is of filetype `perl`, then the script is executed using the Perl interpreter. Debugging
+is also supported using either [VimDebug.vim], the Vim Debugger for Perl or any external debugger
+like [DDD].
+
+Note that in this case `g:target`, `g:workdir` are ignored. It simply runs the current script
+in the current working directory. `g:args` is passed to the script, though.
+
 # Requirements
 
 Actually really required is nothing, because the functions for running a target directly
@@ -28,6 +41,7 @@ Optional plugins:
 [valgrind.vim]: https://github.com/vim-scripts/valgrind.vim
 [VimDebug.vim]: https://github.com/kablamo/VimDebug.vim
 [mk]: https://github.com/gergap/mk
+[DDD]: https://www.gnu.org/software/ddd
 
 # Screencasts
 
@@ -39,11 +53,63 @@ As usual you can install this plugin with your favourite plugin manager like Vun
 
 # Configuration
 
-TODO 
+## Key mappings
+
+You can either manually add mappings to your `.vimrc`, or use the default mappings.
+To enable the default mappings you must add this line before loading the plugin.
+
+```Vim script
+let g:cmake_create_default_mappings=1
+```
+
+## Configuration variables
+
+All these variables contain some default values. You can change these in your `.vimrc`
+after the plugin is loaded.
+
+```Vim script
+" The default CMake build directory, relative to the project root
+" containing the .git directory.
+let g:bld_dir = 'bld'
+" default working directory for launching the target. This can be an
+" absolute path, or a relative one. Relative paths are also relative
+" to the project directory.
+let g:workdir="bin"
+" arguments passed to the target
+let g:args=""
+" Configures the debugger for native binaries: E.g. cgdb, ddd, kdbg, nemiver
+let g:debugger="cgdb"
+" Configures the debugger for perl scripts. It supports VimDebug, an
+" integrated perl debugger for Vim, or simply execute any external perl
+" debugger like ddd.
+let g:perl_debugger="VimDebug"
+" the cmake executable
+let g:cmake="cmake"
+" save project settings on exit
+let g:cmake_save_on_exit=1
+```
+
+# Default key mappings
+
+* `<leader>x` Execute target.
+* `<leader>d` Debug target.
+* `<leader>v` Execute target in Valgrind.
+
+# Commands
+
+* `CMakeTargetList`: Shows all executable CMake targets in new buffer. Simply navigate to the line
+containing the target you want to use and hit <CR>. This will select the target and closes the buffer.
+* `CMakeExecute`: Executes the target without debugging.
+* `CMakeDebug`: Executes the target in the debugger.
+* `CMakeValgrind`: Executes the target using Valgrind.
 
 # Usage
 
-TODO 
+Simply open any source file of a Git project. The plugin will automatically find the project root
+and the top level CMakeLists.txt file. Then execute the command `:CMakeTargetList`, and select the line
+if the target your want to execute by hitting `j` multiple times and press `<CR>` to use the selected line.
+
+Then use one of the default mappings above to run the selected target.
 
 # History
 
