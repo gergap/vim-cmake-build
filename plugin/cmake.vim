@@ -14,26 +14,24 @@ let s:debug_output = 0
 " ===============================================
 " The default CMake build directory, relative to the project root
 " containing the .git directory.
-let g:bld_dir = 'bld'
+let g:blddir_dflt = 'bld'
 " default working directory for launching the target. This can be an
 " absolute path, or a relative one. Relative paths are also relative
 " to the project directory.
-let g:workdir='bin'
+let g:workdir_dflt='bin'
 " arguments passed to the target
-let g:args=""
+let g:args_dflt=""
 " Configures the debugger for native binaries: E.g. cgdb, ddd, kdbg, nemiver
-let g:debugger='cgdb'
+let g:debugger_dflt='cgdb'
 " Configures the debugger for perl scripts. It supports VimDebug, an
 " integrated perl debugger for Vim, or simply execute any external perl
 " debugger like ddd.
 " Possible values: '' (not used), 'VimDebug', 'ddd'
-let g:perl_debugger=''
+let g:perl_debugger_dflt='VimDebug'
 " the cmake executable
-let g:cmake='cmake'
+let g:cmake_dflt='cmake'
 " save project settings on exit
-let g:cmake_save_on_exit=1
-" create default key mappings
-let g:cmake_create_default_mappings=0
+let g:cmake_save_on_exit_dflt=1
 " ====================================================================
 " automatically populated global variables (set by cmake_find_project)
 " ====================================================================
@@ -54,15 +52,41 @@ function! s:debug_print(message)
     endif
 endfunction
 
+" evaluates user configuration variables and sets defaults if missing
+function! s:cmake_evaluate_config()
+    if !exists('g:blddir')
+        let g:blddir=g:blddir_dflt
+    endif
+    if !exists('g:workdir')
+        let g:workdir=g:workdir_dflt
+    endif
+    if !exists('g:args')
+        let g:args=g:args_dflt
+    endif
+    if !exists('g:debugger')
+        let g:debugger=g:debugger_dflt
+    endif
+    if !exists('g:perl_debugger')
+        let g:perl_debugger=g:perl_debugger_dflt
+    endif
+    if !exists('g:cmake')
+        let g:cmake=g:cmake_dflt
+    endif
+    if !exists('g:cmake_save_on_exit')
+        let g:cmake_save_on_exit=g:cmake_save_on_exit_dflt
+    endif
+endfunction
+
 " Finds the toplevel CMake project in the current git project.
 " This requires a Git repo to work, and vim-fugitive.
 function s:cmake_find_project()
+    call s:cmake_evaluate_config()
     if g:loaded_fugitive
         let gitdir = fugitive#extract_git_dir(expand('%'))
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
         let cmake_project = g:project_root."/CMakeLists.txt"
         let project_name = system(s:get_project_name.' '.cmake_project)
-        let g:cbp_project = g:project_root.'/'.g:bld_dir.'/'.project_name.'.cbp'
+        let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
     else
         echoerr "The plugin vim-fugitive is not loaded."
     endif
@@ -71,6 +95,7 @@ endfunction
 " Creates new buffer containing all the executable targets and sets
 " up a mapping to select a target by pressing <CR>
 function! s:create_target_buffer()
+    call s:cmake_evaluate_config()
     new
     normal iSelect target executable:
     setlocal ft=cmake_targetlist
@@ -106,19 +131,19 @@ endfunction
 
 " Computes the working directory to use based on the configuration settings.
 function! s:get_workingdir()
-    if s:is_absolute(g:workdir)
+    if s:is_absolute(s:workdir)
         " use absolute path as is
-        return g:workdir
+        return s:workdir
     else
         " use relative to project root
-        return g:project_root.'/'.g:workdir
+        return g:project_root.'/'.s:workdir
     endif
 endfunction
 
 " Sets the target working directory.
 " This is used by run_target, run_valgrind and run_debugger.
 function! s:set_working_dir()
-    if g:workdir == ''
+    if s:workdir == ''
         " nothing to do, keep current working directory
         return
     endif
@@ -142,6 +167,7 @@ endfunction
 " Otherwise the configured g:target is launched in g:workdir with the arguments
 " g:args.
 function! s:run_target()
+    call s:cmake_evaluate_config()
     if &ft == "perl"
         exe "!perl % ".g:args
     else
@@ -161,6 +187,7 @@ endfunction
 " integration. This functions uses the same configuration like RunTarget:
 " g:target, g:workdir and g:args.
 function! s:run_valgrind()
+    call s:cmake_evaluate_config()
     if exists("g:target")
         let s:dir=getcwd()
         call s:set_working_dir()
@@ -178,6 +205,7 @@ endfunction
 " vimdebug-install -d ~/.vimrc
 " see also 'perldoc Vim::Debug'
 function! s:run_debugger()
+    call s:cmake_evaluate_config()
     if &ft == "perl"
         if g:perl_debugger == 'VimDebug'
             exe "VDstart main"
@@ -200,6 +228,7 @@ endfunction
 
 " Checks if the configuration is correct.
 function! s:sanity_check()
+    call s:cmake_evaluate_config()
     if g:perl_debugger == ''
         echo "No perl debugger configured."
     elseif g:perl_debugger == 'VimDebug'
@@ -210,7 +239,7 @@ function! s:sanity_check()
         endif
     else
         if executable(g:perl_debugger)
-            s:debug_print("Found ".g:perl_debugger.".")
+            call s:debug_print("Found ".g:perl_debugger.".")
         else
             echoerr "The configured perl debugger '".g:perl_debugger."' was not found."
         endif

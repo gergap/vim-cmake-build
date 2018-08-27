@@ -75,17 +75,18 @@ let g:bld_dir = 'bld'
 " default working directory for launching the target. This can be an
 " absolute path, or a relative one. Relative paths are also relative
 " to the project directory.
-let g:workdir="bin"
+let g:workdir='bin'
 " arguments passed to the target
 let g:args=""
 " Configures the debugger for native binaries: E.g. cgdb, ddd, kdbg, nemiver
-let g:debugger="cgdb"
+let g:debugger='cgdb'
 " Configures the debugger for perl scripts. It supports VimDebug, an
 " integrated perl debugger for Vim, or simply execute any external perl
 " debugger like ddd.
-let g:perl_debugger="VimDebug"
+" Possible values: '' (not used), 'VimDebug', 'ddd'
+let g:perl_debugger='ddd'
 " the cmake executable
-let g:cmake="cmake"
+let g:cmake='cmake'
 " save project settings on exit
 let g:cmake_save_on_exit=1
 ```
