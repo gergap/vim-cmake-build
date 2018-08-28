@@ -131,12 +131,12 @@ endfunction
 
 " Computes the working directory to use based on the configuration settings.
 function! s:get_workingdir()
-    if s:is_absolute(s:workdir)
+    if s:is_absolute(g:workdir)
         " use absolute path as is
-        return s:workdir
+        return g:workdir
     else
         " use relative to project root
-        return g:project_root.'/'.s:workdir
+        return g:project_root.'/'.g:workdir
     endif
 endfunction
 
