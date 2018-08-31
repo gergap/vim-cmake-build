@@ -14,6 +14,7 @@ let g:loaded_cmake = 1
 let s:get_targets = expand('<sfile>:p:h:h').'/get_executables.pl'
 let s:get_project_name = expand('<sfile>:p:h:h').'/get_project_name.pl'
 let s:gdbinit = expand('<sfile>:p:h:h').'/.gdbinit'
+let s:dashboard = expand('<sfile>:p:h:h').'/dashboard'
 let s:debug_output = 0
 " ===============================================
 " global variables and settings
@@ -42,6 +43,8 @@ let g:cmake_save_on_exit_dflt=1
 " disable this if you need to use your own .gdbinit, in this case
 " you can integrate this script into your .gdbinit
 let g:cmake_create_gdb_init_dflt=1
+" Create a new Tmux pane running gdb-dashboard
+let g:cmake_create_tmux_dashboard_dflt=1
 " ====================================================================
 " automatically populated global variables (set by cmake_find_project)
 " ====================================================================
@@ -87,6 +90,18 @@ function! s:cmake_evaluate_config()
     endif
     if !exists('g:cmake_create_gdb_init')
         let g:cmake_create_gdb_init=g:cmake_create_gdb_init_dflt
+    endif
+    if !exists('g:cmake_create_tmux_dashboard')
+        if !exists("g:loaded_vimux")
+            " this feature requires tmux and the Vimux plugin
+            let g:cmake_create_tmux_dashboard_dflt=0
+        endif
+        let g:cmake_create_tmux_dashboard=g:cmake_create_tmux_dashboard_dflt
+    else
+        if g:cmake_create_tmux_dashboard && !exists("g:loaded_vimux")
+            echom "Disabled g:cmake_create_tmux_dashboard because Vimux was not found."
+            let g:cmake_create_tmux_dashboard=0
+        endif
     endif
 endfunction
 
@@ -221,6 +236,21 @@ function! s:create_gdb_init()
     endif
 endfunction
 
+" Creates a .gdbinit file in the working directory for loading and storing
+" breakpoints
+function! s:create_gdb_dashboard()
+    if g:cmake_create_tmux_dashboard
+        call VimuxRunCommand(s:dashboard)
+    endif
+endfunction
+
+" Close GDB dashboard again
+function! s:close_gdb_dashboard()
+    if g:cmake_create_tmux_dashboard
+        call VimuxCloseRunner()
+    endif
+endfunction
+
 " Run the target in the debugger.
 " This supports debugging Perl scripts as well as native binaries.
 " note on installing VimDebug:
@@ -239,6 +269,7 @@ function! s:run_debugger()
         if exists("g:target")
             call breakpoints#save()
             call s:create_gdb_init()
+            call s:create_gdb_dashboard()
             if g:args == ''
                 " no arguments
                 let cmd=g:debugger.' '.g:target
@@ -261,6 +292,7 @@ function! s:run_debugger()
             execute "redraw!"
             " restore directory
             exe "cd ".s:dir
+            call s:close_gdb_dashboard()
             call breakpoints#load()
         else
             echo "No target is defined. Please execute 'let g:target=\"<your target>\"'"

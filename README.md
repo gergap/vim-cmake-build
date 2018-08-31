@@ -28,6 +28,11 @@ Required software:
 * Perl
 * [mk] script
 
+Optional software:
+
+* GDB Dashboard - Modular visual interface for GDB in Python
+* TMux - Terminal Multiplexer
+
 Strongly recommended Vim plugins:
 
 * [vim-fugitive] the "best Git wrapper of all time".
@@ -36,10 +41,12 @@ Optional plugins:
 
 * [valgrind.vim] a Valgrind integration for Vim.
 * [VimDebug.vim] a Perl debugger integration for Vim.
+* [Vimux.vim]
 
 [vim-fugitive]: https://github.com/tpope/vim-fugitive
 [valgrind.vim]: https://github.com/vim-scripts/valgrind.vim
 [VimDebug.vim]: https://github.com/kablamo/VimDebug.vim
+[Vimux.vim]: https://github.com/benmills/Vimux.vim
 [mk]: https://github.com/gergap/mk
 [DDD]: https://www.gnu.org/software/ddd
 
