@@ -1,3 +1,8 @@
+" cmake.vim - A Vim integration of CMake for Building, Running, and Debugging.
+" Author: Gerhard Gappmeier <gerhard.gappmeier@ascolab.com>
+" Version: 1.0
+" Home: github.com/gergap/vim-cmake-build.git
+
 " include protection
 if exists('g:loaded_cmake') || &cp
   finish
