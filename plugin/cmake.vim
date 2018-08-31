@@ -13,6 +13,7 @@ let g:loaded_cmake = 1
 " ================================================
 let s:get_targets = expand('<sfile>:p:h:h').'/get_executables.pl'
 let s:get_project_name = expand('<sfile>:p:h:h').'/get_project_name.pl'
+let s:gdbinit = expand('<sfile>:p:h:h').'/.gdbinit'
 let s:debug_output = 0
 " ===============================================
 " global variables and settings
@@ -37,6 +38,10 @@ let g:perl_debugger_dflt='VimDebug'
 let g:cmake_dflt='cmake'
 " save project settings on exit
 let g:cmake_save_on_exit_dflt=1
+" create .gdbinit for loading/storing breakpoints when debugging.
+" disable this if you need to use your own .gdbinit, in this case
+" you can integrate this script into your .gdbinit
+let g:cmake_create_gdb_init_dflt=1
 " ====================================================================
 " automatically populated global variables (set by cmake_find_project)
 " ====================================================================
@@ -79,6 +84,9 @@ function! s:cmake_evaluate_config()
     endif
     if !exists('g:cmake_save_on_exit')
         let g:cmake_save_on_exit=g:cmake_save_on_exit_dflt
+    endif
+    if !exists('g:cmake_create_gdb_init')
+        let g:cmake_create_gdb_init=g:cmake_create_gdb_init_dflt
     endif
 endfunction
 
@@ -203,6 +211,16 @@ function! s:run_valgrind()
     endif
 endfunction
 
+" Creates a .gdbinit file in the working directory for loading and storing
+" breakpoints
+function! s:create_gdb_init()
+    if g:cmake_create_gdb_init
+        let workdir=cmake#get_workingdir()
+        " cmake contains a cross platform copy command
+        call system(g:cmake.' -E copy '.s:gdbinit.' '.workdir)
+    endif
+endfunction
+
 " Run the target in the debugger.
 " This supports debugging Perl scripts as well as native binaries.
 " note on installing VimDebug:
@@ -220,6 +238,7 @@ function! s:run_debugger()
     else
         if exists("g:target")
             call breakpoints#save()
+            call s:create_gdb_init()
             if g:args == ''
                 " no arguments
                 let cmd=g:debugger.' '.g:target

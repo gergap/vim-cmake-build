@@ -18,4 +18,6 @@ end
 # load saved breakpoints
 source .breakpoints.gdb
 
+# start debugging
+start
 
