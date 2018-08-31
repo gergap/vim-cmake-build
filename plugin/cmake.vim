@@ -288,6 +288,7 @@ function! s:load_settings()
     if s:file_exists(settingsfile)
         exe 'source '.settingsfile
     endif
+    silent! call breakpoints#load()
 endfunction
 
 " saves vim plugin settings to file
@@ -300,6 +301,7 @@ function! s:save_settings()
     let settingsfile=g:project_root.'/.settings.vim'
     let settings=["let g:target='".g:target."'", "let g:args='".g:args."'"]
     call writefile(settings, settingsfile)
+    silent! call breakpoints#save()
 endfunction
 
 " Define custom commands
@@ -318,7 +320,6 @@ function! s:plugin_init()
     call s:sanity_check()
     call s:cmake_find_project()
     call s:load_settings()
-    silent! call breakpoints#load()
 endfunction
 
 " start
