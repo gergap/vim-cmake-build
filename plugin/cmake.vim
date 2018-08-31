@@ -148,7 +148,7 @@ endfunction
 " Sets the target working directory.
 " This is used by run_target, run_valgrind and run_debugger.
 function! s:set_working_dir()
-    if s:workdir == ''
+    if g:workdir == ''
         " nothing to do, keep current working directory
         return
     endif
