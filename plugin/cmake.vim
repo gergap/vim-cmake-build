@@ -135,7 +135,7 @@ function! s:file_exists(path)
 endfunction
 
 " Computes the working directory to use based on the configuration settings.
-function! s:get_workingdir()
+function! cmake#get_workingdir()
     if s:is_absolute(g:workdir)
         " use absolute path as is
         return g:workdir
@@ -154,7 +154,7 @@ function! s:set_working_dir()
     endif
 
     " compute target working dir
-    let workdir=s:get_workingdir()
+    let workdir=cmake#get_workingdir()
 
     " check if path exists
     if s:file_exists(workdir)
@@ -219,6 +219,7 @@ function! s:run_debugger()
         endif
     else
         if exists("g:target")
+            call breakpoints#save()
             if g:args == ''
                 " no arguments
                 let cmd=g:debugger.' '.g:target
@@ -241,6 +242,7 @@ function! s:run_debugger()
             execute "redraw!"
             " restore directory
             exe "cd ".s:dir
+            call breakpoints#load()
         else
             echo "No target is defined. Please execute 'let g:target=\"<your target>\"'"
         endif
@@ -277,6 +279,7 @@ function! s:sanity_check()
     endif
 endfunction
 
+" loads vim plugin settings from file
 function! s:load_settings()
     if g:project_root == ''
         return
@@ -287,6 +290,9 @@ function! s:load_settings()
     endif
 endfunction
 
+" saves vim plugin settings to file
+" g:target: selected debug target
+" g:args  : commandline arguments for target
 function! s:save_settings()
     if g:project_root == '' || g:cmake_save_on_exit == 0
         return
@@ -308,9 +314,13 @@ augroup cmakegroup
     autocmd VimLeave * call s:save_settings()
 augroup END
 
-" start
-call s:sanity_check()
-call s:cmake_find_project()
-call s:load_settings()
+function! s:plugin_init()
+    call s:sanity_check()
+    call s:cmake_find_project()
+    call s:load_settings()
+    silent! call breakpoints#load()
+endfunction
 
+" start
+call s:plugin_init()
 
