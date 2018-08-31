@@ -125,7 +125,7 @@ debugging and running Valgrind. I needed to configured the variables g:target, g
 and because I'm lazy I though it would be useful to make the target selectable interactively,
 and because all my programs are CMake based, I'm pulling out this information about available executable
 targets from CMake.
-In addition I integrated my existing [GitHub][mk] script for building CMake based projects and store the settings
+In addition I integrated my existing [mk] script for building CMake based projects and store the settings
 permanently in a dot file when leaving Vim, and reload it on next start. This way Vim "remembers" what
 the active target was.
 
@@ -136,5 +136,5 @@ along with the usual Unix Makefile or Ninja file it is possible to get this from
 A simple Perl script parses this XML file and outputs the desired information.
 To make this working you need to change the CMake generator from `Unix Makefiles` to `CodeBlocks - Unix Makefiles` or
 from `Ninja` to `CodeBlocks - Ninja` if your prefer building using Ninja, like I do.
-Actually this is done automatically when building using [GitHub][mk].
+Actually this is done automatically when building using [mk].
 
