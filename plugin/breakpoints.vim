@@ -22,8 +22,9 @@ let s:get_bp_icon = expand('<sfile>:p:h:h').'/icons/breakpoint.xpm'
 
 " Initializes the breakpoint functionality by defining a new sign type.
 function! s:BreakpointInit()
-    hi Breakpoint ctermfg=black ctermbg=red
-    exe 'sign define breakpoint text=* icon='.s:get_bp_icon.' texthl=Breakpoint linehl=Breakpoint'
+    hi Breakpoint ctermfg=red ctermbg=black
+    hi BreakpointLine ctermfg=black ctermbg=red
+    exe 'sign define breakpoint text=🅑 icon='.s:get_bp_icon.' texthl=Breakpoint linehl=BreakpointLine'
 endfunction
 
 " Creates a new split with information about all existing breakpoints
