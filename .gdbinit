@@ -16,7 +16,13 @@ define hook-quit
 end
 
 # load saved breakpoints
+# this file is created by the vim-cmake-build plugin
 source .breakpoints.gdb
+
+# check if custom GDB options file exist and creates it if not
+# to avoid an error when sourcing it.
+shell touch debug.gdb
+source debug.gdb
 
 # start debugging
 start
