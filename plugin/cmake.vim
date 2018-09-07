@@ -350,7 +350,7 @@ function! s:save_settings()
         return
     endif
     let settingsfile=g:project_root.'/.settings.vim'
-    let settings=["let g:target='".g:target."'", "let g:args='".g:args."'"]
+    let settings=["let g:target='".g:target."'", "let g:args='".g:args."'", "let g:workdir='".g:workdir."'"]
     call writefile(settings, settingsfile)
     silent! call breakpoints#save()
 endfunction
