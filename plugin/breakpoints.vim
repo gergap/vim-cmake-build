@@ -38,7 +38,7 @@ function! s:BreakpointList()
     endfor
 endfunction
 
-" Pobulates a location list with breakpoints.
+" Populates a location list with breakpoints.
 function! s:BreakpointLocList()
     let locations = []
     for bp in values(g:bplist)
@@ -114,7 +114,7 @@ function! breakpoints#save()
     call writefile(bplist, filename)
 endfunction
 
-" Toggles the breakpoint in the currentline.
+" Toggles the breakpoint in the current line.
 " This function does not check if this make sense. Every line is accepted.
 function! s:BPtoggle()
     let file = expand('%:p')
