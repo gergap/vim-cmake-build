@@ -98,8 +98,7 @@ function! breakpoints#load()
         endif
         call s:SetBreakpoint(file, line)
     endfor
-    exe "tabclose"
-    redraw!
+    exe "bd"
 endfunction
 
 " Saves Vim's list of breakpoints in a file that can be sourced by .gdbinit.
