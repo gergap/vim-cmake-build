@@ -113,8 +113,18 @@ function s:cmake_find_project()
         let gitdir = fugitive#extract_git_dir(expand('%'))
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
         let cmake_project = g:project_root."/CMakeLists.txt"
+        if !s:file_exists(cmake_project)
+            let cmake_project = g:project_root."/src/CMakeLists.txt"
+            if !s:file_exists(cmake_project)
+"                echoerr "Could not find CMakeLists.txt in project root."
+                return
+            endif
+        endif
         let project_name = system(s:get_project_name.' '.cmake_project)
         let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
+        "echom "cmake_project=".cmake_project
+        "echom "project_name=".project_name
+        "echom "g:cbp_project=".g:cbp_project
     else
         echoerr "The plugin vim-fugitive is not loaded."
     endif
