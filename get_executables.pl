@@ -32,11 +32,23 @@ sub print_executables {
 #    print Dumper($build);
 
     foreach my $target (@{$build->{'Target'}}) {
+#                print "title=$target->{'title'}\n";
         foreach my $option (@{$target->{'Option'}}) {
             if ($option->{'output'}) {
                 $exe = $option->{'output'};
+#                print "exe=$exe\n";
             }
-            if ($option->{'type'} && $option->{'type'} eq 1) {
+            if ($option->{'type'}) {
+#                print "type=$option->{'type'}\n";
+            }
+            # Possible types:
+            # 0 .. GUI Application
+            # 1 .. Console Application
+            # 2 .. Static Library
+            # 3 .. Dynamic Library
+            # 4 .. Commands only
+            # 5 .. Native excutable (Windows .sys file)
+            if ($option->{'type'} && ($option->{'type'} eq 0 || $option->{'type'} eq 1)) {
                 $unique{$exe}++;
                 last;
             }
