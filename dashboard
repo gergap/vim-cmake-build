@@ -1,0 +1,23 @@
+#!/bin/bash
+# Creates a file with the current GDB-dashboard output terminal.
+# This file can be sourced by ~/.gdbinit so that the output
+# show automatically in the correct terminal.
+#
+# Example ~/.gdbinit:
+# # Source GNU Dashboard
+# source ~/.gdbinit_dashboard
+# # Redirect dashboard output to correct terminal
+# source ~/.dashboard.gdb
+# 
+# # disable source view in dashboard (we use CGDB)
+# dashboard source
+# dashboard history
+# dashboard registers
+# 
+# # dashboard aliases
+# alias w=dashboard expressions watch
+# alias uw=dashboard expressions unwatch
+
+TTY=`tty`
+echo "dashboard -output $TTY" > ~/.dashboard.gdb
+

@@ -13,6 +13,8 @@ let g:loaded_cmake = 1
 " ================================================
 let s:get_targets = expand('<sfile>:p:h:h').'/get_executables.pl'
 let s:get_project_name = expand('<sfile>:p:h:h').'/get_project_name.pl'
+let s:gdbinit = expand('<sfile>:p:h:h').'/.gdbinit'
+let s:dashboard = expand('<sfile>:p:h:h').'/dashboard'
 let s:debug_output = 0
 " ===============================================
 " global variables and settings
@@ -37,6 +39,12 @@ let g:perl_debugger_dflt='VimDebug'
 let g:cmake_dflt='cmake'
 " save project settings on exit
 let g:cmake_save_on_exit_dflt=1
+" create .gdbinit for loading/storing breakpoints when debugging.
+" disable this if you need to use your own .gdbinit, in this case
+" you can integrate this script into your .gdbinit
+let g:cmake_create_gdb_init_dflt=1
+" Create a new Tmux pane running gdb-dashboard
+let g:cmake_create_tmux_dashboard_dflt=1
 " ====================================================================
 " automatically populated global variables (set by cmake_find_project)
 " ====================================================================
@@ -80,6 +88,21 @@ function! s:cmake_evaluate_config()
     if !exists('g:cmake_save_on_exit')
         let g:cmake_save_on_exit=g:cmake_save_on_exit_dflt
     endif
+    if !exists('g:cmake_create_gdb_init')
+        let g:cmake_create_gdb_init=g:cmake_create_gdb_init_dflt
+    endif
+    if !exists('g:cmake_create_tmux_dashboard')
+        if !exists("g:loaded_vimux")
+            " this feature requires tmux and the Vimux plugin
+            let g:cmake_create_tmux_dashboard_dflt=0
+        endif
+        let g:cmake_create_tmux_dashboard=g:cmake_create_tmux_dashboard_dflt
+    else
+        if g:cmake_create_tmux_dashboard && !exists("g:loaded_vimux")
+            echom "Disabled g:cmake_create_tmux_dashboard because Vimux was not found."
+            let g:cmake_create_tmux_dashboard=0
+        endif
+    endif
 endfunction
 
 " Finds the toplevel CMake project in the current git project.
@@ -90,8 +113,18 @@ function s:cmake_find_project()
         let gitdir = fugitive#extract_git_dir(expand('%'))
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
         let cmake_project = g:project_root."/CMakeLists.txt"
+        if !s:file_exists(cmake_project)
+            let cmake_project = g:project_root."/src/CMakeLists.txt"
+            if !s:file_exists(cmake_project)
+"                echoerr "Could not find CMakeLists.txt in project root."
+                return
+            endif
+        endif
         let project_name = system(s:get_project_name.' '.cmake_project)
         let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
+        "echom "cmake_project=".cmake_project
+        "echom "project_name=".project_name
+        "echom "g:cbp_project=".g:cbp_project
     else
         echoerr "The plugin vim-fugitive is not loaded."
     endif
@@ -135,7 +168,7 @@ function! s:file_exists(path)
 endfunction
 
 " Computes the working directory to use based on the configuration settings.
-function! s:get_workingdir()
+function! cmake#get_workingdir()
     if s:is_absolute(g:workdir)
         " use absolute path as is
         return g:workdir
@@ -154,7 +187,7 @@ function! s:set_working_dir()
     endif
 
     " compute target working dir
-    let workdir=s:get_workingdir()
+    let workdir=cmake#get_workingdir()
 
     " check if path exists
     if s:file_exists(workdir)
@@ -203,6 +236,31 @@ function! s:run_valgrind()
     endif
 endfunction
 
+" Creates a .gdbinit file in the working directory for loading and storing
+" breakpoints
+function! s:create_gdb_init()
+    if g:cmake_create_gdb_init
+        let workdir=cmake#get_workingdir()
+        " cmake contains a cross platform copy command
+        call system(g:cmake.' -E copy '.s:gdbinit.' '.workdir)
+    endif
+endfunction
+
+" Creates a .gdbinit file in the working directory for loading and storing
+" breakpoints
+function! s:create_gdb_dashboard()
+    if g:cmake_create_tmux_dashboard
+        call VimuxRunCommand(s:dashboard)
+    endif
+endfunction
+
+" Close GDB dashboard again
+function! s:close_gdb_dashboard()
+    if g:cmake_create_tmux_dashboard
+        call VimuxCloseRunner()
+    endif
+endfunction
+
 " Run the target in the debugger.
 " This supports debugging Perl scripts as well as native binaries.
 " note on installing VimDebug:
@@ -219,6 +277,9 @@ function! s:run_debugger()
         endif
     else
         if exists("g:target")
+            call breakpoints#save()
+            call s:create_gdb_init()
+            call s:create_gdb_dashboard()
             if g:args == ''
                 " no arguments
                 let cmd=g:debugger.' '.g:target
@@ -241,6 +302,8 @@ function! s:run_debugger()
             execute "redraw!"
             " restore directory
             exe "cd ".s:dir
+            call s:close_gdb_dashboard()
+            call breakpoints#load()
         else
             echo "No target is defined. Please execute 'let g:target=\"<your target>\"'"
         endif
@@ -277,6 +340,7 @@ function! s:sanity_check()
     endif
 endfunction
 
+" loads vim plugin settings from file
 function! s:load_settings()
     if g:project_root == ''
         return
@@ -285,15 +349,20 @@ function! s:load_settings()
     if s:file_exists(settingsfile)
         exe 'source '.settingsfile
     endif
+    silent! call breakpoints#load()
 endfunction
 
+" saves vim plugin settings to file
+" g:target: selected debug target
+" g:args  : commandline arguments for target
 function! s:save_settings()
     if g:project_root == '' || g:cmake_save_on_exit == 0
         return
     endif
     let settingsfile=g:project_root.'/.settings.vim'
-    let settings=["let g:target='".g:target."'", "let g:args='".g:args."'"]
+    let settings=["let g:target='".g:target."'", "let g:args='".g:args."'", "let g:workdir='".g:workdir."'"]
     call writefile(settings, settingsfile)
+    silent! call breakpoints#save()
 endfunction
 
 " Define custom commands
@@ -308,9 +377,12 @@ augroup cmakegroup
     autocmd VimLeave * call s:save_settings()
 augroup END
 
-" start
-call s:sanity_check()
-call s:cmake_find_project()
-call s:load_settings()
+function! s:plugin_init()
+    call s:sanity_check()
+    call s:cmake_find_project()
+    call s:load_settings()
+endfunction
 
+" start
+call s:plugin_init()
 
