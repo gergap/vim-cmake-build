@@ -113,9 +113,9 @@ function s:cmake_find_project()
         let gitdir = fugitive#extract_git_dir(expand('%'))
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
         let cmake_project = g:project_root."/CMakeLists.txt"
-        if !s:file_exists(cmake_project)
+        if !cmake#file_exists(cmake_project)
             let cmake_project = g:project_root."/src/CMakeLists.txt"
-            if !s:file_exists(cmake_project)
+            if !cmake#file_exists(cmake_project)
 "                echoerr "Could not find CMakeLists.txt in project root."
                 return
             endif
@@ -159,7 +159,7 @@ function! s:is_absolute(path)
     endif
 endfunction
 
-function! s:file_exists(path)
+function! cmake#file_exists(path)
     if !empty(glob(a:path))
         return 1
     else
@@ -190,7 +190,7 @@ function! s:set_working_dir()
     let workdir=cmake#get_workingdir()
 
     " check if path exists
-    if s:file_exists(workdir)
+    if cmake#file_exists(workdir)
         call s:debug_print("workdir=".workdir)
         exe "cd ".workdir
     else
@@ -346,7 +346,7 @@ function! s:load_settings()
         return
     endif
     let settingsfile=g:project_root.'/.settings.vim'
-    if s:file_exists(settingsfile)
+    if cmake#file_exists(settingsfile)
         exe 'source '.settingsfile
     endif
     silent! call breakpoints#load()
