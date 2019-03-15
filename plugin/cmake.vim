@@ -95,6 +95,7 @@ function! s:cmake_evaluate_config()
         if !exists("g:loaded_vimux")
             " this feature requires tmux and the Vimux plugin
             let g:cmake_create_tmux_dashboard_dflt=0
+            echom "Disabled g:cmake_create_tmux_dashboard because Vimux was not found."
         endif
         let g:cmake_create_tmux_dashboard=g:cmake_create_tmux_dashboard_dflt
     else
