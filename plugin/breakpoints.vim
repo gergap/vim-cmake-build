@@ -81,6 +81,9 @@ endfunction
 function! breakpoints#load()
     call s:RemoveAllBreakpoints()
     let filename = cmake#get_workingdir().'/.breakpoints.gdb'
+    if !cmake#file_exists(filename)
+        return
+    endif
     let lines = readfile(filename)
     let g:bpindex = 1
     let g:bplist = {}
