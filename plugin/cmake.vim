@@ -34,7 +34,7 @@ let g:debugger_dflt='cgdb'
 " integrated perl debugger for Vim, or simply execute any external perl
 " debugger like ddd.
 " Possible values: '' (not used), 'VimDebug', 'ddd'
-let g:perl_debugger_dflt='VimDebug'
+let g:perl_debugger_dflt='ddd'
 " the cmake executable
 let g:cmake_dflt='cmake'
 " save project settings on exit
