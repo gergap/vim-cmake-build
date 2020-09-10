@@ -111,13 +111,14 @@ endfunction
 function s:cmake_find_project()
     call s:cmake_evaluate_config()
     if g:loaded_fugitive
-        let gitdir = fugitive#extract_git_dir(expand('%'))
+        let gitdir = FugitiveExtractGitDir(getcwd())
+        "echom "gitdir=".gitdir
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
         let cmake_project = g:project_root."/CMakeLists.txt"
         if !cmake#file_exists(cmake_project)
             let cmake_project = g:project_root."/src/CMakeLists.txt"
             if !cmake#file_exists(cmake_project)
-"                echoerr "Could not find CMakeLists.txt in project root."
+                echoerr "Could not find CMakeLists.txt in project root."
                 return
             endif
         endif
