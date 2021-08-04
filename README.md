@@ -5,6 +5,9 @@ Build, Run, Debug integration for Vim for CMake based projects.
 You can configure the working directory and command line arguments using
 simple Vim variables. These settings will be used for all three execution modes.
 
+These project settings will be stored in `.settings.vim` in the project root,
+so Vim "remembers" your settings.
+
 It is also possible to set breakpoints from Vim, which get synced back and forth
 between GDB and Vim as demonstrated in the screencast below.
 
@@ -21,7 +24,7 @@ in the current working directory. `g:args` is passed to the script, though.
 # Requirements
 
 Actually really required is nothing, because the functions for running a target directly
-or in the debugger always will work. But the main functionality of this plugin
+or starting it in the debugger always works. But the main functionality of this plugin
 is finding the project root using Git and extracting info from a CMakeLists.txt. To make
 this working you need at least [vim-fugitive].
 
@@ -97,7 +100,7 @@ let g:debugger='cgdb'
 let g:perl_debugger='ddd'
 " the cmake executable
 let g:cmake='cmake'
-" save project settings on exit
+" save project settings on exit (.settings.vim)
 let g:cmake_save_on_exit=1
 ```
 
@@ -124,17 +127,17 @@ This will select the target and closes the buffer.
 
 Simply open any source file of a Git project. The plugin will automatically find the project root
 and the top level CMakeLists.txt file. Then execute the command `:CMakeTargetList`, and select the line
-of the target your want to execute by hitting `j` multiple times and press `<CR>` to use the selected line.
+of the target you want to use by moving the cursor to that line and press `<CR>`.
 
 Then use one of the default mappings above to run the selected target.
 
 # History
 
 I refactored this plugin from some existing code in my `.vimrc`, which contains mappings for launching,
-debugging and running Valgrind. I needed to configured the variables g:target, g:workdir, and g:args manually,
-and because I'm lazy I thought it would be useful to make the target selectable interactively,
-and because all my programs are CMake based, I'm pulling out this information about available executable
-targets from CMake.
+debugging and running Valgrind. I needed to configure the variables g:target, g:workdir, and g:args manually,
+and because I'm lazy, I thought it would be useful to make the target selectable interactively.
+Because all my programs are CMake based, I'm extracting the information about available executable
+targets from a CMake generated CodeBlocks xml file.
 In addition, I integrated my existing [mk] script for building CMake based projects and store the settings
 permanently in a dot file when leaving Vim, and reload it on next start. This way Vim "remembers" what
 the active target was.
