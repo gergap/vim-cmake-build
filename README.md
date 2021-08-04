@@ -5,9 +5,12 @@ Build, Run, Debug integration for Vim for CMake based projects.
 You can configure the working directory and command line arguments using
 simple Vim variables. These settings will be used for all three execution modes.
 
+It is also possible to set breakpoints from Vim, which get synced back and forth
+between GDB and Vim as demonstrated in the screencast below.
+
 ## Perl support
 
-As a nice bonus the execution of Perl scripts is also supported. When the current buffer
+As a nice bonus, the execution of Perl scripts is also supported. When the current buffer
 is of filetype `perl`, then the script is executed using the Perl interpreter. Debugging
 is also supported using either [VimDebug.vim], the Vim Debugger for Perl or any external debugger
 like [DDD].
@@ -52,7 +55,7 @@ Optional plugins:
 
 # Screencasts
 
-TODO
+![Vim CMake Build Demo][screencast]
 
 # Installation
 
@@ -129,10 +132,10 @@ Then use one of the default mappings above to run the selected target.
 
 I refactored this plugin from some existing code in my `.vimrc`, which contains mappings for launching,
 debugging and running Valgrind. I needed to configured the variables g:target, g:workdir, and g:args manually,
-and because I'm lazy I though it would be useful to make the target selectable interactively,
+and because I'm lazy I thought it would be useful to make the target selectable interactively,
 and because all my programs are CMake based, I'm pulling out this information about available executable
 targets from CMake.
-In addition I integrated my existing [mk] script for building CMake based projects and store the settings
+In addition, I integrated my existing [mk] script for building CMake based projects and store the settings
 permanently in a dot file when leaving Vim, and reload it on next start. This way Vim "remembers" what
 the active target was.
 
@@ -145,3 +148,4 @@ To make this working you need to change the CMake generator from `Unix Makefiles
 from `Ninja` to `CodeBlocks - Ninja` if your prefer building using Ninja, like I do.
 Actually this is done automatically when building using [mk].
 
+[screencast]: https://raw.github.com/gergap/vim-cmake-build/master/doc/vim-cmake-build.gif
