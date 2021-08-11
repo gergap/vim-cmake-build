@@ -122,7 +122,7 @@ function s:cmake_find_project()
         if !cmake#file_exists(cmake_project)
             let cmake_project = g:project_root."/src/CMakeLists.txt"
             if !cmake#file_exists(cmake_project)
-                echoerr "Could not find CMakeLists.txt in project root."
+                silent echom "Could not find CMakeLists.txt in project root."
                 return
             endif
         endif
