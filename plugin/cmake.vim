@@ -104,6 +104,10 @@ function! s:cmake_evaluate_config()
             let g:cmake_create_tmux_dashboard=0
         endif
     endif
+    if g:cmake_create_tmux_dashboard && $TERM !~? "^tmux-"
+        " we don't run in a tmux session
+        let g:cmake_create_tmux_dashboard=0
+    endif
 endfunction
 
 " Finds the toplevel CMake project in the current git project.
