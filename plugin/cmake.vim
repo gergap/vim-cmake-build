@@ -118,13 +118,19 @@ function s:cmake_find_project()
         let gitdir = FugitiveExtractGitDir(getcwd())
         "echom "gitdir=".gitdir
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
-        let cmake_project = g:project_root."/CMakeLists.txt"
-        if !cmake#file_exists(cmake_project)
+        if cmake#file_exists(g:project_root."/CMakeLists.txt")
+            " Standard CMake project with top-level CMakeLists.txt
+            let cmake_project = g:project_root."/CMakeLists.txt"
+        elseif cmake#file_exists(g:project_root."/src/CMakeLists.txt")
+            " Standard CMake project with CMakeLists.txt in src subfolder
             let cmake_project = g:project_root."/src/CMakeLists.txt"
-            if !cmake#file_exists(cmake_project)
-                silent echom "Could not find CMakeLists.txt in project root."
-                return
-            endif
+        elseif cmake#file_exists(g:project_root."/output/src/CMakeLists.txt")
+            " UaModeler project with source code in output subfolder
+            let g:project_root = g:project_root."/output"
+            let cmake_project = g:project_root."/src/CMakeLists.txt"
+        else
+            silent echom "Could not find CMakeLists.txt in project root."
+            return
         endif
         let project_name = system(s:get_project_name.' '.cmake_project)
         let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
