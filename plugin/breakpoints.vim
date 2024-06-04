@@ -107,7 +107,7 @@ endfunction
 " Saves Vim's list of breakpoints in a file that can be sourced by .gdbinit.
 function! breakpoints#save()
     let filename = cmake#get_workingdir().'/.breakpoints.gdb'
-    let bplist=[]
+    let bplist=["set breakpoint pending on"]
     for bp in values(g:bplist)
         let loc = bp.file.':'.bp.line
         let bpline = 'break '.loc
