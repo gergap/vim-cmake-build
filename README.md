@@ -75,7 +75,6 @@ nmap <leader>d :CMakeDebug<CR>
 nmap <leader>x :CMakeExecute<CR>
 nmap <leader>v :CMakeValgrind<CR>
 ```
-
 ## Configuration variables
 
 All these variables contain some default values. You can change these in your
@@ -109,6 +108,7 @@ let g:cmake_save_on_exit=1
 * `<leader>x` Execute target.
 * `<leader>d` Debug target.
 * `<leader>v` Execute target in Valgrind.
+* `<space>` Toggle Breakpoint.
 
 # Commands
 
@@ -122,6 +122,8 @@ This will select the target and closes the buffer.
 * `CMakeExecute`: Executes the target without debugging.
 * `CMakeDebug`: Executes the target in the debugger.
 * `CMakeValgrind`: Executes the target using Valgrind.
+* `BPlist`: Shows a list of active breakpoints.
+* `BPloclist`: Opens a location list with all active breakpoints so that you can easily jump to the breakpoint locations.
 
 # Usage
 
