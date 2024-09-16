@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#!/usr/bin/perl
 
 use strict;
 use warnings;
@@ -11,7 +11,7 @@ sub load_cbp {
     my $filename = shift;
     my $twig = XML::Twig->new();
 
-#    print STDERR "Parsing XML file...\n";
+#    print STDERR "Parsing XML file '$filename'...\n";
     $twig->parsefile($filename);
 #    print STDERR "Converting to tree structure...\n";
     $project = $twig->simplify(
@@ -58,6 +58,11 @@ sub print_executables {
     foreach $exe (sort keys %unique) {
         print "$exe\n";
     }
+}
+
+if ($#ARGV != 0) {
+    print STDERR "Usage: $0 <cbp-file>\n";
+    exit 1;
 }
 
 load_cbp($ARGV[0]);

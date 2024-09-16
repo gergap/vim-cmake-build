@@ -116,7 +116,7 @@ function s:cmake_find_project()
     call s:cmake_evaluate_config()
     if g:loaded_fugitive
         let gitdir = FugitiveExtractGitDir(getcwd())
-        "echom "gitdir=".gitdir
+"        echom "gitdir=".gitdir
         let g:project_root = fnamemodify(gitdir, ':p:h:h')
         if cmake#file_exists(g:project_root."/CMakeLists.txt")
             " Standard CMake project with top-level CMakeLists.txt
@@ -132,11 +132,22 @@ function s:cmake_find_project()
             silent echom "Could not find CMakeLists.txt in project root."
             return
         endif
-        let project_name = system(s:get_project_name.' '.cmake_project)
-        let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
-        "echom "cmake_project=".cmake_project
-        "echom "project_name=".project_name
-        "echom "g:cbp_project=".g:cbp_project
+        if !cmake#file_exists(cmake_project)
+            " try output/src subfolder (UaModeler)
+            let cmake_project = g:project_root."/output/src/CMakeLists.txt"
+        endif
+        if cmake#file_exists(cmake_project)
+            " get project name from CMakeLists.txt
+            let project_name = system(s:get_project_name.' '.cmake_project)
+            " create CodeBlocks project filename
+            let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
+        else
+            silent echom "Could not find CMakeLists.txt in project root."
+            return
+        endif
+"        echom "cmake_project=".cmake_project
+"        echom "project_name=".project_name
+"        echom "g:cbp_project=".g:cbp_project
     else
         echoerr "The plugin vim-fugitive is not loaded."
     endif

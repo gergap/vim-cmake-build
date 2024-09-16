@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#!/usr/bin/perl
 use strict;
 use warnings;
 
@@ -7,7 +7,7 @@ open(my $fh, "<", $filename)
     or die "Can't open < '$filename' $!";
 
 while (<$fh>) {
-    if (/project\((\w+)(?:\s+(\w+))?\)/i) {
+    if (/project\((\w+)(?:\s+(\w+))?/i) {
         print "$1";
         last;
     }
