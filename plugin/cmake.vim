@@ -157,6 +157,9 @@ endfunction
 " up a mapping to select a target by pressing <CR>
 function! s:create_target_buffer()
     call s:cmake_evaluate_config()
+    if g:cbp_project == ''
+        call s:cmake_find_project()
+    endif
     new
     normal iSelect target executable:
     setlocal ft=cmake_targetlist
