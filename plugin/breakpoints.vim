@@ -89,6 +89,11 @@ function! breakpoints#load()
     let g:bplist = {}
     exe "tabnew"
     for line in lines
+        " ignore lines not starting with 'break'
+        if line!~ '^break'
+            continue
+        endif
+
         let loc = strpart(line, 6)
         let parts = split(loc, ':')
         let file = parts[0]
