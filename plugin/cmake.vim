@@ -104,9 +104,10 @@ function! s:cmake_evaluate_config()
             let g:cmake_create_tmux_dashboard=0
         endif
     endif
-    if g:cmake_create_tmux_dashboard && $TERM !~? "^tmux-"
+    if g:cmake_create_tmux_dashboard && $TERM !~ '\v^(tmux|screen)-'
         " we don't run in a tmux session
         let g:cmake_create_tmux_dashboard=0
+        echom "Disabled g:cmake_create_tmux_dashboard not running in tmux (TERM=".$TERM.")"
     endif
 endfunction
 
