@@ -99,6 +99,8 @@ let g:debugger='cgdb'
 let g:perl_debugger='ddd'
 " the cmake executable
 let g:cmake='cmake'
+" build configuration for multi-config generators, e.g. Debug
+let g:cmake_config=''
 " save project settings on exit (.settings.vim)
 let g:cmake_save_on_exit=1
 ```
@@ -139,18 +141,16 @@ I refactored this plugin from some existing code in my `.vimrc`, which contains 
 debugging and running Valgrind. I needed to configure the variables g:target, g:workdir, and g:args manually,
 and because I'm lazy, I thought it would be useful to make the target selectable interactively.
 Because all my programs are CMake based, I'm extracting the information about available executable
-targets from a CMake generated CodeBlocks xml file.
+targets from CMake's File API codemodel.
 In addition, I integrated my existing [mk] script for building CMake based projects and store the settings
 permanently in a dot file when leaving Vim, and reload it on next start. This way Vim "remembers" what
 the active target was.
 
 # Technical background
 
-It is not so easy to get a list of executable targets out from CMake directly. But by generating a CodeBlocks project
-along with the usual Unix Makefile or Ninja file it is possible to get this from the CodeBlocks project file.
-A simple Perl script parses this XML file and outputs the desired information.
-To make this working you need to change the CMake generator from `Unix Makefiles` to `CodeBlocks - Unix Makefiles` or
-from `Ninja` to `CodeBlocks - Ninja` if your prefer building using Ninja, like I do.
-Actually this is done automatically when building using [mk].
+CMakeTargetList creates a client query in the build directory and reads the JSON
+codemodel reply generated during configure/generate. This works with the normal
+Unix Makefiles, Ninja, and IDE generators without requiring the deprecated
+CodeBlocks generator.
 
 [screencast]: https://raw.github.com/gergap/vim-cmake-build/master/doc/vim-cmake-build.gif

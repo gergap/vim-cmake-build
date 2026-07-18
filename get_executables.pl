@@ -2,71 +2,60 @@
 
 use strict;
 use warnings;
-use Data::Dumper;
-use XML::Twig;
+use JSON::PP;
+use File::Glob qw(bsd_glob);
+use File::Spec;
 
 my $project;
 
-sub load_cbp {
+sub load_json {
     my $filename = shift;
-    my $twig = XML::Twig->new();
-
-#    print STDERR "Parsing XML file '$filename'...\n";
-    $twig->parsefile($filename);
-#    print STDERR "Converting to tree structure...\n";
-    $project = $twig->simplify(
-        keyattr => {
-#            'Target'        => '+title',
-        },
-        forcearray => [
-            'Target',
-            'Option',
-        ]);
+    open my $file, '<', $filename or die "Cannot open '$filename': $!\n";
+    local $/;
+    my $json = <$file>;
+    close $file;
+    return decode_json($json);
 }
 
 sub print_executables {
-    my $build = $project->{'Project'}->{'Build'};
-    my $exe;
+    my ($build_dir, $configuration) = @_;
+    my $reply_dir = File::Spec->catdir($build_dir, '.cmake', 'api', 'v1', 'reply');
+    my @indexes = bsd_glob(File::Spec->catfile($reply_dir, 'index-*.json'));
+    @indexes = sort @indexes;
+    die "No CMake File API reply found\n" unless @indexes;
+
+    my $index_file = $indexes[-1];
+    my $index = load_json($index_file);
+    my $reference = $index->{'reply'}->{'client-vim-cmake-build'}->{'codemodel-v2'};
+    $reference ||= (grep { $_->{'kind'} eq 'codemodel' } @{$index->{'objects'} || []})[0];
+    die "CMake did not provide a codemodel reply\n" unless $reference && $reference->{'jsonFile'};
+
+    my $codemodel = load_json(File::Spec->catfile($reply_dir, $reference->{'jsonFile'}));
     my %unique;
-
-#    print Dumper($build);
-
-    foreach my $target (@{$build->{'Target'}}) {
-#                print "title=$target->{'title'}\n";
-        foreach my $option (@{$target->{'Option'}}) {
-            if ($option->{'output'}) {
-                $exe = $option->{'output'};
-#                print "exe=$exe\n";
-            }
-            if ($option->{'type'}) {
-#                print "type=$option->{'type'}\n";
-            }
-            # Possible types:
-            # 0 .. GUI Application
-            # 1 .. Console Application
-            # 2 .. Static Library
-            # 3 .. Dynamic Library
-            # 4 .. Commands only
-            # 5 .. Native excutable (Windows .sys file)
-            if ($option->{'type'} && ($option->{'type'} eq 0 || $option->{'type'} eq 1)) {
-                $unique{$exe}++;
-                last;
+    foreach my $config (@{$codemodel->{'configurations'} || []}) {
+        next if defined($configuration) && $configuration ne '' && $config->{'name'} ne $configuration;
+        foreach my $target_ref (@{$config->{'targets'} || []}) {
+            my $target_file = File::Spec->catfile($reply_dir, $target_ref->{'jsonFile'});
+            my $target = load_json($target_file);
+            next unless ($target->{'type'} || '') eq 'EXECUTABLE';
+            foreach my $artifact (@{$target->{'artifacts'} || []}) {
+                my $path = $artifact->{'path'};
+                next unless defined $path && $path ne '';
+                $path = File::Spec->catfile($codemodel->{'paths'}->{'build'}, $path)
+                    unless File::Spec->file_name_is_absolute($path);
+                $unique{$path} = 1;
             }
         }
     }
-
-    foreach $exe (sort keys %unique) {
-        print "$exe\n";
-    }
+    print "$_\n" for sort keys %unique;
 }
 
-if ($#ARGV != 0) {
-    print STDERR "Usage: $0 <cbp-file>\n";
+if ($#ARGV < 0 || $#ARGV > 1) {
+    print STDERR "Usage: $0 <build-dir> [configuration]\n";
     exit 1;
 }
 
-load_cbp($ARGV[0]);
-print_executables();
+print_executables($ARGV[0], $ARGV[1]);
 
 __END__
 
@@ -154,5 +143,3 @@ RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
 FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
 SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
-
-

@@ -12,7 +12,6 @@ let g:loaded_cmake = 1
 " some internal variables to find the perl scripts
 " ================================================
 let s:get_targets = expand('<sfile>:p:h:h').'/get_executables.pl'
-let s:get_project_name = expand('<sfile>:p:h:h').'/get_project_name.pl'
 let s:gdbinit = expand('<sfile>:p:h:h').'/.gdbinit'
 let s:dashboard = expand('<sfile>:p:h:h').'/dashboard'
 let s:debug_output = 0
@@ -39,6 +38,8 @@ let g:perl_debugger_dflt='ddd'
 let g:cmake_dflt='cmake'
 " save project settings on exit
 let g:cmake_save_on_exit_dflt=1
+" build configuration for multi-config generators, e.g. Debug
+let g:cmake_config_dflt=''
 " create .gdbinit for loading/storing breakpoints when debugging.
 " disable this if you need to use your own .gdbinit, in this case
 " you can integrate this script into your .gdbinit
@@ -51,10 +52,9 @@ let g:cmake_create_tmux_dashboard_dflt=1
 " Project root directory. Can be set manually or is found automatically
 " when working with files from a git repo.
 let g:project_root = ''
-" full path to generated CodeBlocks project. This is used to extract
-" the executable build targets. You need to use the CMake generator
-" 'CodeBlocks - Ninja' or 'CodeBlocks - Unix Makefiles' for this.
-let g:cbp_project = ''
+" CMake source and build directories used by the File API
+let g:cmake_project = ''
+let g:cmake_build_dir = ''
 " The target executable to run, debug, or analyze in Valgrind
 let g:target = ''
 
@@ -87,6 +87,9 @@ function! s:cmake_evaluate_config()
     endif
     if !exists('g:cmake_save_on_exit')
         let g:cmake_save_on_exit=g:cmake_save_on_exit_dflt
+    endif
+    if !exists('g:cmake_config')
+        let g:cmake_config=g:cmake_config_dflt
     endif
     if !exists('g:cmake_create_gdb_init')
         let g:cmake_create_gdb_init=g:cmake_create_gdb_init_dflt
@@ -138,17 +141,18 @@ function s:cmake_find_project()
             let cmake_project = g:project_root."/output/src/CMakeLists.txt"
         endif
         if cmake#file_exists(cmake_project)
-            " get project name from CMakeLists.txt
-            let project_name = system(s:get_project_name.' '.cmake_project)
-            " create CodeBlocks project filename
-            let g:cbp_project = g:project_root.'/'.g:blddir.'/'.project_name.'.cbp'
+            let g:cmake_project = cmake_project
+            let g:cmake_build_dir = g:project_root.'/'.g:blddir
+            " Ask CMake for its semantic build model on the next configure.
+            let query_dir = g:cmake_build_dir.'/.cmake/api/v1/query/client-vim-cmake-build'
+            call mkdir(query_dir, 'p')
+            call writefile([], query_dir.'/codemodel-v2')
         else
             silent echom "Could not find CMakeLists.txt in project root."
             return
         endif
 "        echom "cmake_project=".cmake_project
 "        echom "project_name=".project_name
-"        echom "g:cbp_project=".g:cbp_project
     else
         echoerr "The plugin vim-fugitive is not loaded."
     endif
@@ -158,14 +162,30 @@ endfunction
 " up a mapping to select a target by pressing <CR>
 function! s:create_target_buffer()
     call s:cmake_evaluate_config()
-    if g:cbp_project == ''
+    if g:cmake_project == '' || g:cmake_build_dir == ''
         call s:cmake_find_project()
+    endif
+    let reply_dir = g:cmake_build_dir.'/.cmake/api/v1/reply'
+    if empty(glob(reply_dir.'/index-*.json'))
+        " A File API query is answered during configure/generate.
+        let configure_cmd = shellescape(g:cmake).' -S '.shellescape(fnamemodify(g:cmake_project, ':h')).' -B '.shellescape(g:cmake_build_dir)
+        call system(configure_cmd)
+        if v:shell_error != 0
+            echoerr 'CMake configure failed; cannot read the target list.'
+            return
+        endif
     endif
     new
     normal iSelect target executable:
     setlocal ft=cmake_targetlist
     setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted nomodified
-    execute "read !".s:get_targets.' '.g:cbp_project
+    let targets = systemlist('perl '.shellescape(s:get_targets).' '.shellescape(g:cmake_build_dir).' '.shellescape(g:cmake_config))
+    if v:shell_error != 0
+        bwipeout!
+        echoerr 'Could not read executable targets from the CMake File API.'
+        return
+    endif
+    call append(line('$'), targets)
     nmap <buffer> <CR> :call cmake#target_select()<cr>
     normal! ggj
 endfunction
@@ -310,6 +330,7 @@ function! s:run_debugger()
             if g:args == ''
                 " no arguments
                 let cmd=g:debugger.' '.g:target
+                echom "no args"
             else
                 " arguments defined
                 if (g:debugger=='gdb' || g:debugger=='cgdb')
@@ -412,4 +433,3 @@ endfunction
 
 " start
 call s:plugin_init()
-
