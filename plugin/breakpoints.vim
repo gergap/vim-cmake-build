@@ -57,7 +57,7 @@ function! s:SetBreakpoint(file, line)
     let loc = bp.file.':'.bp.line
     let g:bplist[loc] = bp
     " set sign
-    exe "sign place ".bp.index." name=breakpoint line=".bp.line." file=".bp.file
+    execute 'sign place '.bp.index.' name=breakpoint line='.bp.line.' file='.fnameescape(bp.file)
 endfunction
 
 function! s:RemoveBreakpoint(bp)
@@ -79,29 +79,49 @@ endfunction
 " It does not work with GDB's "save breakpoints" function because, this 
 " does not create the full path.
 function! breakpoints#load()
-    call s:RemoveAllBreakpoints()
     let filename = cmake#get_workingdir().'/.breakpoints.gdb'
     if !cmake#file_exists(filename)
         return
     endif
     let lines = readfile(filename)
-    let g:bpindex = 1
-    let g:bplist = {}
-    exe "tabnew"
+    let loaded = []
     for line in lines
-        " ignore lines not starting with 'break'
-        if line!~ '^break'
+        if line !~ '^break\s\+'
             continue
         endif
 
-        let loc = strpart(line, 6)
-        let parts = split(loc, ':')
-        let file = parts[0]
-        let line = parts[1]
+        " Use the final colon so filenames containing ':' remain intact.
+        let loc = substitute(strpart(line, 6), '\s\+$', '', '')
+        let line_number = matchstr(loc, ':\d\+$')
+        if line_number == ''
+            continue
+        endif
+        let file = strpart(loc, 0, strlen(loc) - strlen(line_number))
+        if file =~ "^'.*'$"
+            let file = strpart(file, 1, strlen(file) - 2)
+            let file = substitute(file, "'\\\\''", "'", 'g')
+        endif
+        if file == ''
+            continue
+        endif
+        call add(loaded, {'file': file, 'line': strpart(line_number, 1)})
+    endfor
+
+    " Do not discard the current state if GDB produced an empty or invalid file.
+    if empty(loaded)
+        return
+    endif
+    call s:RemoveAllBreakpoints()
+    let g:bpindex = 1
+    let g:bplist = {}
+    exe "tabnew"
+    for bp in loaded
+        let file = bp.file
+        let line = bp.line
         " check if buffer for file exists
         if bufloaded(file) == 0
             " load file into buffer (required to set sign)
-            exe "edit ".file
+            execute 'edit '.fnameescape(file)
 "            noautocmd exe "edit ".file
         endif
         call s:SetBreakpoint(file, line)
@@ -113,12 +133,12 @@ endfunction
 function! breakpoints#save()
     let filename = cmake#get_workingdir().'/.breakpoints.gdb'
     " Check if there are any breakpoints in g:bplist
-    if len(g:pblist) == 0
+    if len(g:bplist) == 0
         call delete(filename)
     else
         let bplist=["set breakpoint pending on"]
         for bp in values(g:bplist)
-            let loc = bp.file.':'.bp.line
+            let loc = shellescape(bp.file, 1).':'.bp.line
             let bpline = 'break '.loc
             call add(bplist, bpline)
         endfor
@@ -147,8 +167,6 @@ command! BPlist call s:BreakpointList()
 command! BPloclist call s:BreakpointLocList()
 command! BPtoggle call s:BPtoggle()
 command! BPload call breakpoints#load()
-command! BPsave call breakpoints$save()
+command! BPsave call breakpoints#save()
 
 call s:BreakpointInit()
-
-

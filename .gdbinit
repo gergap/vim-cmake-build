@@ -7,7 +7,7 @@ define dump_breaks
     info breakpoints
     set logging enabled off
     set logging redirect off
-    shell perl -ne "print \"break \$1\n\" if /at\s(.*:\d+)/" bp.tmp > $arg0
+    shell perl -ne "print \"break '\$1'\n\" if /^\s*\d+(?:\.\d+)?\s+.*\bkeep\s+y\b.*\bat\s(.*:\d+)/" bp.tmp > $arg0
 end
 
 # autosave on exit
@@ -26,4 +26,3 @@ source debug.gdb
 
 # start debugging
 start
-
